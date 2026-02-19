@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const dotenv = require('dotenv');
 
 // Load environment variables
@@ -9,6 +10,17 @@ dotenv.config();
 const authRoutes = require('./routes/authRoutes');
 
 const app = express();
+
+// ============================================
+// ✅ CORS — MUST BE BEFORE ROUTES
+// ============================================
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
 // ============================================
 // MIDDLEWARE
