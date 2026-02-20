@@ -4,9 +4,14 @@ const router = express.Router();
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
+// ✅ Use env secret (same for sign + verify)
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("❌ JWT_SECRET is missing in environment variables");
+}
 
 // ============================================
-// AUTH MIDDLEWARE - Verify user by ID from header
+// AUTH MIDDLEWARE - Verify user by token
 // ============================================
 const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -21,7 +26,8 @@ const protect = async (req, res, next) => {
   try {
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, "MY_SECRET_KEY");
+    // ✅ verify with env secret
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     const user = await User.findById(decoded.id);
 
@@ -34,7 +40,6 @@ const protect = async (req, res, next) => {
 
     req.user = user;
     next();
-
   } catch (error) {
     return res.status(401).json({
       success: false,
@@ -43,9 +48,8 @@ const protect = async (req, res, next) => {
   }
 };
 
-
 // ============================================
-// ✅ SIGNUP - Only Email & Password
+// ✅ SIGNUP
 // ============================================
 router.post("/signup", async (req, res) => {
   const { email, password } = req.body;
@@ -82,7 +86,6 @@ router.post("/signup", async (req, res) => {
       email: user.email,
       isProfileComplete: user.isProfileComplete,
     });
-
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({
@@ -124,17 +127,13 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // 🔐 CREATE JWT TOKEN
-    const token = jwt.sign(
-      { id: user._id },
-      "MY_SECRET_KEY",   // later use process.env
-      { expiresIn: "7d" }
-    );
+    // ✅ CREATE JWT TOKEN (env secret)
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
     res.json({
       success: true,
       message: "Login success",
-      token,   // 🔥 VERY IMPORTANT
+      token,
       userId: user._id,
       email: user.email,
       isProfileComplete: user.isProfileComplete,
@@ -142,7 +141,6 @@ router.post("/login", async (req, res) => {
       title: user.title || "",
       company: user.company || "",
     });
-
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({
@@ -152,19 +150,13 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 // ============================================
 // ✅ GET PROFILE
 // ============================================
 router.get("/profile", protect, async (req, res) => {
   try {
     const user = req.user;
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "user not found",
-      });
-    }
+
     res.json({
       success: true,
       user: {
@@ -180,21 +172,16 @@ router.get("/profile", protect, async (req, res) => {
         experience: user.experience || "",
         company: user.company || "",
         phone: user.phone || "",
-         shipSpecialization: user.shipSpecialization || [],
-    additionalNotes: user.additionalNotes || "",
-    signature: user.signature || "",
+        shipSpecialization: user.shipSpecialization || [],
+        additionalNotes: user.additionalNotes || "",
+        signature: user.signature || "",
 
-        currentVessel: user.currentVessel || {
-          name: "",
-          imo: "",
-          type: "",
-        },
+        currentVessel: user.currentVessel || { name: "", imo: "", type: "" },
 
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
     });
-
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({
@@ -204,48 +191,44 @@ router.get("/profile", protect, async (req, res) => {
   }
 });
 
-
-
 // ============================================
-// ✅ UPDATE PROFILE (Save Profile Button)
+// ✅ UPDATE PROFILE
 // ============================================
-
-// Change path to /profile (remove :id) and add 'protect' middleware
 router.put("/profile", protect, async (req, res) => {
   try {
     const updates = {};
     const allowedFields = [
-  "fullName",
-  "title",
-  "employeeId",
-  "licenseNumber",
-  "certifications",
-  "experience",
-  "company",
-  "phone",
-  "email",
-  "shipSpecialization",
-  "additionalNotes",
-  "signature"
-];
+      "fullName",
+      "title",
+      "employeeId",
+      "licenseNumber",
+      "certifications",
+      "experience",
+      "company",
+      "phone",
+      "email",
+      "shipSpecialization",
+      "additionalNotes",
+      "signature",
+    ];
 
-    // Map top-level strings
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 
-    // Map nested Vessel fields using dot notation
     if (req.body.currentVessel) {
-      if (req.body.currentVessel.name !== undefined) updates["currentVessel.name"] = req.body.currentVessel.name;
-      if (req.body.currentVessel.imo !== undefined) updates["currentVessel.imo"] = req.body.currentVessel.imo;
-      if (req.body.currentVessel.type !== undefined) updates["currentVessel.type"] = req.body.currentVessel.type;
+      if (req.body.currentVessel.name !== undefined)
+        updates["currentVessel.name"] = req.body.currentVessel.name;
+      if (req.body.currentVessel.imo !== undefined)
+        updates["currentVessel.imo"] = req.body.currentVessel.imo;
+      if (req.body.currentVessel.type !== undefined)
+        updates["currentVessel.type"] = req.body.currentVessel.type;
     }
-     updates.isProfileComplete = true;
+
+    updates.isProfileComplete = true;
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user._id, 
+      req.user._id,
       { $set: updates },
       { new: true, runValidators: true }
     );
@@ -255,22 +238,18 @@ router.put("/profile", protect, async (req, res) => {
       message: "Profile updated successfully",
       user: updatedUser,
     });
-
   } catch (error) {
     console.error("Update profile error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Server error", 
+      message: error.message || "Server error",
     });
   }
 });
 
-
-
-
-
-
-
+// ============================================
+// ✅ DELETE PROFILE
+// ============================================
 router.delete("/profile", protect, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.user._id);
@@ -279,7 +258,6 @@ router.delete("/profile", protect, async (req, res) => {
       success: true,
       message: "Account deleted successfully",
     });
-
   } catch (error) {
     console.error("Delete account error:", error);
     res.status(500).json({
