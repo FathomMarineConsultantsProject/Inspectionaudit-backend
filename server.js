@@ -1,3 +1,7 @@
+
+const dns = require('node:dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -58,20 +62,30 @@ app.use('/api/auth', authRoutes);
 const PORT = process.env.PORT || 5000;
 const DATABASE_URL= process.env.DATABASE_URL || 'mongodb://127.0.0.1:27017/your-database-name';
 
-mongoose.connect(DATABASE_URL)
+mongoose.set("strictQuery", true);
+
+mongoose.connect(DATABASE_URL, {
+  serverSelectionTimeoutMS: 8000,  // ✅ fail fast (8 sec)
+  connectTimeoutMS: 8000,
+})
   .then(() => {
     console.log('✅ MongoDB connected successfully');
-    
-    // Start server only after DB connects
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📝 API available at http://localhost:${PORT}/api/auth`);
     });
   })
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
+    console.error('❌ MongoDB connection error FULL:', err);
+    console.error('❌ Message:', err.message);
     process.exit(1);
   });
+
+
+
+console.log("✅ ENV DATABASE_URL exists:", !!process.env.DATABASE_URL);
+console.log("✅ DATABASE_URL starts with:", (process.env.DATABASE_URL || "").slice(0, 20));
 
 // ============================================
 // ERROR HANDLING
