@@ -52,7 +52,8 @@ const protect = async (req, res, next) => {
 // ✅ SIGNUP
 // ============================================
 router.post("/signup", async (req, res) => {
-  const { email, password } = req.body;
+ const email = req.body.email.trim().toLowerCase();
+const password = req.body.password;
 
   if (!email || !password) {
     return res.status(400).json({
@@ -99,7 +100,8 @@ router.post("/signup", async (req, res) => {
 // ✅ LOGIN
 // ============================================
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const email = req.body.email.trim().toLowerCase();
+const password = req.body.password;
 
   if (!email || !password) {
     return res.status(400).json({
