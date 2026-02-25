@@ -44,6 +44,13 @@ app.get("/", (req, res) => {
 
 // Routes
 app.use("/api/auth", authRoutes);
+const userRoutes = require("./routes/userRoutes");
+const loginRoutes = require("./routes/loginRoutes");
+const inspectionRoutes = require("./routes/inspectionRoutes");
+
+app.use("/api/inspectors", userRoutes);
+app.use("/api/inspections", inspectionRoutes);
+app.use("/api/logins", loginRoutes);
 
 // DB
 const PORT = process.env.PORT || 5000;

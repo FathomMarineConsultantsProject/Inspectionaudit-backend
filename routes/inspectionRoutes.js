@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Inspection = require("../models/Inspection");
 const upload = require("../middleware/upload");
-
+const mongoose = require("mongoose");
 /* ===============================
    1️⃣ CREATE INSPECTION (MULTIPLE IMAGES)
 ================================ */
@@ -76,6 +76,22 @@ router.get("/:inspectionId", async (req, res) => {
     }
 
     res.json({ success: true, inspection });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+router.get("/", async (req, res) => {
+  try {
+    const inspections = await Inspection.find().sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: inspections.length,
+      inspections,
+    });
   } catch (err) {
     res.status(500).json({
       success: false,
