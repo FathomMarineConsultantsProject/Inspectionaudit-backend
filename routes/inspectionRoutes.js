@@ -9,38 +9,46 @@ const mongoose = require("mongoose");
 router.post(
   "/create",
   upload.fields([
-    { name: "shipImage", maxCount: 100 }, // ✅ Allow up to 10 images
-    { name: "logo", maxCount: 1 },       // Keep logo as 1
+    { name: "shipImage", maxCount: 100 },
+    { name: "logo", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
-      const { userId, shipName, portName, dateText, poweredBy } = req.body;
+      console.log("BODY:", req.body);
 
-      // ✅ 1. Handle Multiple Ship Images
+      // ✅ Match frontend field names
+      const {
+        userId,
+        shipName,
+        portInspected,
+        surveyorName,
+        inspectedDate,
+      } = req.body;
+
+      // Multiple images
       let shipImagePaths = [];
       if (req.files?.shipImage) {
-        // Map over the array of files to get their paths
-        shipImagePaths = req.files.shipImage.map((file) => file.path);
+        shipImagePaths = req.files.shipImage.map(file => file.path);
       }
 
-      // ✅ 2. Handle Single Logo
       const logoPath = req.files?.logo?.[0]?.path || "";
 
-     const inspection = await Inspection.create({
-   userId,
-  shipName,
-  portName: portInspected,
-  dateText: inspectedDate,
-  surveyorName,
-  shipImage: shipImagePaths,
-  logo: logoPath,
-});
+      const inspection = await Inspection.create({
+        userId,
+        shipName,
+        portName: portInspected,      // map to schema
+        dateText: inspectedDate,      // map to schema
+        poweredBy: surveyorName,      // map to schema
+        shipImage: shipImagePaths,
+        logo: logoPath,
+      });
 
       res.status(201).json({
         success: true,
         inspectionId: inspection._id,
-        imageCount: shipImagePaths.length, // Useful for debugging
+        imageCount: shipImagePaths.length,
       });
+
     } catch (err) {
       console.error("Error creating inspection:", err);
       res.status(500).json({

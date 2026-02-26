@@ -100,7 +100,7 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-
+//quotation part
 app.post("/send-quotation", async (req, res) => {
   try {
     const {
@@ -162,7 +162,10 @@ app.post("/send-quotation", async (req, res) => {
       html: htmlContent,
     });
 
-    res.status(200).json({ message: "Email Sent Successfully" });
+    res.status(200).json({ 
+  message: "Email Content Generated",
+  html: htmlContent
+});
 
   } catch (error) {
     res.status(500).json({ error: "Email sending failed" });
