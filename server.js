@@ -100,3 +100,71 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+
+app.post("/send-quotation", async (req, res) => {
+  try {
+    const {
+      shipType,
+      serviceType,
+      portCountry,
+      inspectionDate
+    } = req.body;
+
+    const htmlContent = `
+    <div style="font-family: Arial, sans-serif;">
+
+      <p><strong>Greetings from Sinotech Marine!</strong></p>
+
+      <p>
+        We request your best quotation & availability for new inspection enquiry 
+        as per details given below:
+      </p>
+
+      <h3>New Inspection Enquiry Details</h3>
+
+      <table style="border-collapse: collapse; width: 100%; max-width:600px;" border="1" cellpadding="8">
+        <tr>
+          <td><strong>Ship Type</strong></td>
+          <td>${shipType}</td>
+        </tr>
+        <tr>
+          <td><strong>Service Type</strong></td>
+          <td>${serviceType}</td>
+        </tr>
+        <tr>
+          <td><strong>Port & Country</strong></td>
+          <td>${portCountry}</td>
+        </tr>
+        <tr>
+          <td><strong>On Around Inspection</strong></td>
+          <td>${inspectionDate}</td>
+        </tr>
+      </table>
+
+      <br/>
+
+      <a href="https://www.shipinspectors.com/submit-quotation"
+         style="display:inline-block;padding:12px 25px;background:#007bff;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">
+         Submit Quotation
+      </a>
+
+      <br/><br/>
+
+      <p>Kind Regards,<br/>Sinotech Marine</p>
+
+    </div>
+    `;
+
+    await transporter.sendMail({
+      from: '"Sinotech Marine" <yourgmail@gmail.com>',
+      to: "inspection@company.com",
+      subject: "New Inspection Enquiry Details",
+      html: htmlContent,
+    });
+
+    res.status(200).json({ message: "Email Sent Successfully" });
+
+  } catch (error) {
+    res.status(500).json({ error: "Email sending failed" });
+  }
+});

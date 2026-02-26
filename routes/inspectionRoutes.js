@@ -26,15 +26,15 @@ router.post(
       // ✅ 2. Handle Single Logo
       const logoPath = req.files?.logo?.[0]?.path || "";
 
-      const inspection = await Inspection.create({
-        userId,
-        shipName,
-        portName,
-        dateText,
-        poweredBy,
-        shipImage: shipImagePaths, // Save the Array of paths
-        logo: logoPath,
-      });
+     const inspection = await Inspection.create({
+   userId,
+  shipName,
+  portName: portInspected,
+  dateText: inspectedDate,
+  surveyorName,
+  shipImage: shipImagePaths,
+  logo: logoPath,
+});
 
       res.status(201).json({
         success: true,

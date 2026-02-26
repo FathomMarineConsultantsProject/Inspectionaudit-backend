@@ -9,11 +9,11 @@ const inspectionSchema = new mongoose.Schema(
     shipName: String,
     portName: String,
     dateText: String,
-    poweredBy: String,
     shipImage: [{ type: String }],
     logo: String,
   },
   { timestamps: true }
 );
+
 
 module.exports = mongoose.model("Inspection", inspectionSchema);

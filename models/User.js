@@ -1,24 +1,10 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String },
+  isProfileComplete: { type: Boolean, default: false },
 
-  // === AUTH ===
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true 
-  },
-
-  password: { 
-    type: String 
-  },
-
-  isProfileComplete: {
-    type: Boolean,
-    default: false
-  },
-
-  // === PROFILE FIELDS ===
   fullName: { type: String, default: "" },
   title: { type: String, default: "" },
   employeeId: { type: String, default: "" },
@@ -28,13 +14,18 @@ const userSchema = new mongoose.Schema({
   company: { type: String, default: "" },
   phone: { type: String, default: "" },
 
-  shipSpecialization: {
-    type: [String],
-    default: []
+  shipSpecialization: { type: [String], default: [] },
+
+  availability: {
+    type: String,
+    enum: ["AVAILABLE", "BUSY", "ON LEAVE", "UNAVAILABLE"],
+    default: "AVAILABLE"
   },
 
-  additionalNotes: { type: String, default: "" },
-  signature: { type: String, default: "" },
+  location: {
+    type: String,
+    default: ""
+  },
 
   currentVessel: {
     name: { type: String, default: "" },

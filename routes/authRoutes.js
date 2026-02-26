@@ -160,30 +160,34 @@ router.get("/profile", protect, async (req, res) => {
     const user = req.user;
 
     res.json({
-      success: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        isProfileComplete: user.isProfileComplete,
+  success: true,
+  user: {
+    id: user._id,
+    email: user.email,
+    isProfileComplete: user.isProfileComplete,
 
-        fullName: user.fullName || "",
-        title: user.title || "",
-        employeeId: user.employeeId || "",
-        licenseNumber: user.licenseNumber || "",
-        certifications: user.certifications || "",
-        experience: user.experience || "",
-        company: user.company || "",
-        phone: user.phone || "",
-        shipSpecialization: user.shipSpecialization || [],
-        additionalNotes: user.additionalNotes || "",
-        signature: user.signature || "",
+    fullName: user.fullName || "",
+    title: user.title || "",
+    employeeId: user.employeeId || "",
+    licenseNumber: user.licenseNumber || "",
+    certifications: user.certifications || "",
+    experience: user.experience || "",
+    company: user.company || "",
+    phone: user.phone || "",
+    shipSpecialization: user.shipSpecialization || [],
+    additionalNotes: user.additionalNotes || "",
+    signature: user.signature || "",
 
-        currentVessel: user.currentVessel || { name: "", imo: "", type: "" },
+    // ✅ ADD THESE
+    availability: user.availability || "AVAILABLE",
+    location: user.location || "",
 
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-    });
+    currentVessel: user.currentVessel || { name: "", imo: "", type: "" },
+
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  },
+});
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({
@@ -200,19 +204,21 @@ router.put("/profile", protect, async (req, res) => {
   try {
     const updates = {};
     const allowedFields = [
-      "fullName",
-      "title",
-      "employeeId",
-      "licenseNumber",
-      "certifications",
-      "experience",
-      "company",
-      "phone",
-      "email",
-      "shipSpecialization",
-      "additionalNotes",
-      "signature",
-    ];
+  "fullName",
+  "title",
+  "employeeId",
+  "licenseNumber",
+  "certifications",
+  "experience",
+  "company",
+  "phone",
+  "email",
+  "shipSpecialization",
+  "additionalNotes",
+  "signature",
+  "availability",
+  "location"
+];
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
