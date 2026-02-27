@@ -72,7 +72,7 @@ const transporter = nodemailer.createTransport({
 /* =========================
    SEND QUOTATION ROUTE
 ========================= */
-app.post("/send-quotation", async (req, res) => {
+app.post("/api/send-quotation", async (req, res) => {
   try {
     const { shipType, serviceType, portCountry, inspectionDate } = req.body;
 
