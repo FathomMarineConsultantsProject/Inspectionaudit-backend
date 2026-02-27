@@ -59,24 +59,46 @@ app.use("/api/inspections", inspectionRoutes);
 app.use("/api/logins", loginRoutes);
 
 /* =========================
-   EMAIL SETUP
+   EMAIL SETUP (UPDATED)
 ========================= */
 const transporter = nodemailer.createTransport({
   service: "gmail",
+  secure: true, 
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASS, // MUST be the 16-digit App Password
   },
 });
+
+// Verify connection on startup (check Vercel logs for this)
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("❌ Email Config Error:", error.message);
+  } else {
+    console.log("✅ Email Server Ready");
+  }
+});
+
 
 /* =========================
    SEND QUOTATION ROUTE
 ========================= */
 app.post("/api/send-quotation", async (req, res) => {
+  // 1. Log the incoming request to see it in Vercel Logs
+  console.log("Incoming request body:", req.body);
+
   try {
     const { shipType, serviceType, portCountry, inspectionDate } = req.body;
 
-    const htmlContent = `
+    // 2. Validate data presence
+    if (!shipType || !serviceType) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing shipType or serviceType" 
+      });
+    }
+
+    const htmlContent =`
 <div style="font-family: Arial, sans-serif; background-color:#f4f6f9; padding:20px;">
   <div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:8px;">
 
@@ -141,23 +163,27 @@ app.post("/api/send-quotation", async (req, res) => {
 </div>
 `;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: "inspection@company.com",
-      subject: "New Inspection Enquiry Details",
+   const info = await transporter.sendMail({
+      from: `"Sinotech Enquiry" <${process.env.EMAIL_USER}>`,
+      to: "inspection@company.com", 
+      subject: `New Inspection Enquiry: ${shipType}`,
       html: htmlContent,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Email Sent Successfully ✅",
+      messageId: info.messageId
     });
 
   } catch (error) {
-    console.error("Email error:", error);
-    res.status(500).json({
+    // 4. Return the specific error for debugging in Postman
+    console.error("Vercel Email Error:", error);
+    return res.status(500).json({
       success: false,
       message: "Email sending failed ❌",
+      error: error.message,
+      code: error.code // helps identify if it's AUTH or CONNECTION issue
     });
   }
 });
