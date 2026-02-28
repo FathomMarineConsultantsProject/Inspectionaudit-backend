@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
 const User = require("../models/User");
+const Login = require("../models/Login");
 const jwt = require("jsonwebtoken");
 
 // ✅ Use env secret (same for sign + verify)
@@ -52,8 +53,8 @@ const protect = async (req, res, next) => {
 // ✅ SIGNUP
 // ============================================
 router.post("/signup", async (req, res) => {
- const email = req.body.email.trim().toLowerCase();
-const password = req.body.password;
+  const email = req.body.email.trim().toLowerCase();
+  const password = req.body.password;
 
   if (!email || !password) {
     return res.status(400).json({
@@ -101,7 +102,7 @@ const password = req.body.password;
 // ============================================
 router.post("/login", async (req, res) => {
   const email = req.body.email.trim().toLowerCase();
-const password = req.body.password;
+  const password = req.body.password;
 
   if (!email || !password) {
     return res.status(400).json({
@@ -129,7 +130,14 @@ const password = req.body.password;
       });
     }
 
-    // ✅ CREATE JWT TOKEN (env secret)
+    // Record login log in database
+    await Login.create({ 
+      user: user._id, 
+      ipAddress: req.ip, 
+      userAgent: req.headers['user-agent'] 
+    });
+
+    // Create JWT token
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
     res.json({
@@ -160,34 +168,33 @@ router.get("/profile", protect, async (req, res) => {
     const user = req.user;
 
     res.json({
-  success: true,
-  user: {
-    id: user._id,
-    email: user.email,
-    isProfileComplete: user.isProfileComplete,
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        isProfileComplete: user.isProfileComplete,
 
-    fullName: user.fullName || "",
-    title: user.title || "",
-    employeeId: user.employeeId || "",
-    licenseNumber: user.licenseNumber || "",
-    certifications: user.certifications || "",
-    experience: user.experience || "",
-    company: user.company || "",
-    phone: user.phone || "",
-    shipSpecialization: user.shipSpecialization || [],
-    additionalNotes: user.additionalNotes || "",
-    signature: user.signature || "",
+        fullName: user.fullName || "",
+        title: user.title || "",
+        employeeId: user.employeeId || "",
+        licenseNumber: user.licenseNumber || "",
+        certifications: user.certifications || "",
+        experience: user.experience || "",
+        company: user.company || "",
+        phone: user.phone || "",
+        shipSpecialization: user.shipSpecialization || [],
+        additionalNotes: user.additionalNotes || "",
+        signature: user.signature || "",
 
-    // ✅ ADD THESE
-    availability: user.availability || "AVAILABLE",
-    location: user.location || "",
+        availability: user.availability || "AVAILABLE",
+        location: user.location || "",
 
-    currentVessel: user.currentVessel || { name: "", imo: "", type: "" },
+        currentVessel: user.currentVessel || { name: "", imo: "", type: "" },
 
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  },
-});
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+    });
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({
@@ -204,21 +211,21 @@ router.put("/profile", protect, async (req, res) => {
   try {
     const updates = {};
     const allowedFields = [
-  "fullName",
-  "title",
-  "employeeId",
-  "licenseNumber",
-  "certifications",
-  "experience",
-  "company",
-  "phone",
-  "email",
-  "shipSpecialization",
-  "additionalNotes",
-  "signature",
-  "availability",
-  "location"
-];
+      "fullName",
+      "title",
+      "employeeId",
+      "licenseNumber",
+      "certifications",
+      "experience",
+      "company",
+      "phone",
+      "email",
+      "shipSpecialization",
+      "additionalNotes",
+      "signature",
+      "availability",
+      "location"
+    ];
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
