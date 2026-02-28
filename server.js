@@ -156,7 +156,7 @@ app.post("/api/send-quotation", async (req, res) => {
 
     <p style="margin-top:30px;">
       Regards,<br/>
-      <strong>Sinotech Marine</strong>
+      <strong>Fathom Marine</strong>
     </p>
 
   </div>
@@ -164,8 +164,8 @@ app.post("/api/send-quotation", async (req, res) => {
 `;
 
    const info = await transporter.sendMail({
-      from: `"Sinotech Enquiry" <${process.env.EMAIL_USER}>`,
-      to: "inspection@company.com", 
+      from: `"Fathom Marine" <${process.env.EMAIL_USER}>`,
+      to: "project@fathommarineconsultants.com", 
       subject: `New Inspection Enquiry: ${shipType}`,
       html: htmlContent,
     });
@@ -186,6 +186,10 @@ app.post("/api/send-quotation", async (req, res) => {
       code: error.code // helps identify if it's AUTH or CONNECTION issue
     });
   }
+});
+transporter.verify((error, success) => {
+  if (error) console.log("❌ Email server verification failed:", error.message);
+  else console.log("✅ Email server ready!");
 });
 
 /* =========================
