@@ -1,13 +1,9 @@
-const dns = require("node:dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const nodemailer = require("nodemailer");
 
-dotenv.config();
+dotenv.config(); // ✅ ALWAYS TOP
 
 const app = express();
 
@@ -20,7 +16,6 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:8081",
-      // 👉 yaha apna frontend vercel URL add karna
       // "https://your-frontend.vercel.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -29,7 +24,6 @@ app.use(
 );
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 /* =========================
    Logging Middleware
@@ -53,145 +47,13 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const loginRoutes = require("./routes/loginRoutes");
 const inspectionRoutes = require("./routes/inspectionRoutes");
+const quotationRoutes = require("./routes/quotationRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/inspectors", userRoutes);
-app.use("/api/inspections", inspectionRoutes);
 app.use("/api/logins", loginRoutes);
-
-/* =========================
-   EMAIL SETUP (UPDATED)
-========================= */
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  secure: true, 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // MUST be the 16-digit App Password
-  },
-});
-
-// Verify connection on startup (check Vercel logs for this)
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("❌ Email Config Error:", error.message);
-  } else {
-    console.log("✅ Email Server Ready");
-  }
-});
-
-
-/* =========================
-   SEND QUOTATION ROUTE
-========================= */
-app.post("/api/send-quotation", async (req, res) => {
-  // 1. Log the incoming request to see it in Vercel Logs
-  console.log("Incoming request body:", req.body);
-
-  try {
-    const { shipType, serviceType, portCountry, inspectionDate } = req.body;
-
-    // 2. Validate data presence
-    if (!shipType || !serviceType) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Missing shipType or serviceType" 
-      });
-    }
-
-    const htmlContent =`
-<div style="font-family: Arial, sans-serif; background-color:#f4f6f9; padding:20px;">
-  <div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:8px;">
-
-    <h2 style="color:#0d6efd; text-align:center; margin-bottom:20px;">
-      🚢 New Inspection Enquiry
-    </h2>
-
-    <p>Hello Team,</p>
-    <p>Please find the inspection request details below:</p>
-
-    <table width="100%" border="1" cellspacing="0" cellpadding="12"
-      style="border-collapse:collapse; margin-top:20px; font-size:14px;">
-
-      <tr style="background-color:#0d6efd; color:white;">
-        <th align="left">Field</th>
-        <th align="left">Details</th>
-      </tr>
-
-      <tr>
-        <td><strong>Ship Type</strong></td>
-        <td>${shipType}</td>
-      </tr>
-
-      <tr style="background-color:#f9f9f9;">
-        <td><strong>Service Type</strong></td>
-        <td>${serviceType}</td>
-      </tr>
-
-      <tr>
-        <td><strong>Port & Country</strong></td>
-        <td>${portCountry}</td>
-      </tr>
-
-      <tr style="background-color:#f9f9f9;">
-        <td><strong>Inspection Date</strong></td>
-        <td>${inspectionDate}</td>
-      </tr>
-
-    </table>
-
-    <div style="text-align:center; margin-top:25px;">
-      <a href="https://www.shipinspectors.com/submit-quotation"
-        style="
-          background-color:#0d6efd;
-          color:white;
-          padding:12px 25px;
-          text-decoration:none;
-          border-radius:5px;
-          font-weight:bold;
-          display:inline-block;
-        ">
-        Submit Quotation
-      </a>
-    </div>
-
-    <p style="margin-top:30px;">
-      Regards,<br/>
-      <strong>Fathom Marine</strong>
-    </p>
-
-  </div>
-</div>
-`;
-
-   const info = await transporter.sendMail({
-      from: `"Fathom Marine" <${process.env.EMAIL_USER}>`,
-      to: "project@fathommarineconsultants.com", 
-      subject: `New Inspection Enquiry: ${shipType}`,
-      html: htmlContent,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Email Sent Successfully ✅",
-      messageId: info.messageId
-    });
-
-  } catch (error) {
-    // 4. Return the specific error for debugging in Postman
-    console.error("Vercel Email Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Email sending failed ❌",
-      error: error.message,
-      code: error.code // helps identify if it's AUTH or CONNECTION issue
-    });
-  }
-});
-transporter.verify((error, success) => {
-  if (error) console.log("❌ Email server verification failed:", error.message);
-  else console.log("✅ Email server ready!");
-});
+app.use("/api/inspections", inspectionRoutes);
+app.use("/api", quotationRoutes); // ✅ quotation routes here
 
 /* =========================
    DATABASE CONNECTION
