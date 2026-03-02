@@ -9,12 +9,28 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
-    "dotenv": "^17.2.4",
+    "dotenv": "^17.3.1",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.23.0",
     "multer": "^2.0.2",
     "nodemailer": "^8.0.1",
     "uuid": "^8.3.2"
+  },
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FathomMarineConsultantsProject/Inspectionaudit-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/FathomMarineConsultantsProject/Inspectionaudit-backend/issues"
+  },
+  "homepage": "https://github.com/FathomMarineConsultantsProject/Inspectionaudit-backend#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

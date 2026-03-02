@@ -53,7 +53,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/inspectors", userRoutes);
 app.use("/api/logins", loginRoutes);
 app.use("/api/inspections", inspectionRoutes);
-app.use("/api", quotationRoutes); // ✅ quotation routes here
+app.use("/api/quotation", quotationRoutes);
 
 /* =========================
    DATABASE CONNECTION
