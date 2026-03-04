@@ -30,7 +30,7 @@ exports.createQuotation = async (req, res) => {
     });
 
     // ✅ Unique Submit Link
-const submitLink = "https://inspectionaudit-frontend-dashboard.vercel.app/submit-quotation";
+const submitLink = "https://inspectionaudit-frontend-dashboard.vercel.app/SubmitQuotation";
     // ✅ Send Email
    await transporter.sendMail({
   from: process.env.EMAIL_USER,
