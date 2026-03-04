@@ -15,7 +15,7 @@ router.post("/", createQuotation);
 /* =========================
    SUBMIT QUOTATION (Team)
 ========================= */
-router.put("/submit/:id", submitQuotation);
+router.post("/submit", submitQuotation);
 
 /* =========================
    DASHBOARD GET ALL

@@ -30,7 +30,7 @@ exports.createQuotation = async (req, res) => {
     });
 
     // ✅ Unique Submit Link
-  const submitLink = `${process.env.FRONTEND_URL}/submit-quotation/${quotation._id}`;
+const submitLink = "https://inspectionaudit-frontend-dashboard.vercel.app/submit-quotation";
     // ✅ Send Email
    await transporter.sendMail({
   from: process.env.EMAIL_USER,
@@ -106,10 +106,11 @@ exports.createQuotation = async (req, res) => {
    SUBMIT QUOTATION (Team fills amount)
 ========================= */
 exports.submitQuotation = async (req, res) => {
+  exports.submitQuotation = async (req, res) => {
   try {
     const { amount, description } = req.body;
 
-    await Quotation.findByIdAndUpdate(req.params.id, {
+    await Quotation.create({
       amount,
       description,
       status: "Quoted",
@@ -117,11 +118,12 @@ exports.submitQuotation = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Quotation Submitted Successfully",
+      message: "Quotation submitted successfully",
     });
   } catch (error) {
     res.status(500).json({ success: false });
   }
+};
 };
 
 /* =========================
