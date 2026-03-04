@@ -6,9 +6,14 @@ const quotationSchema = new mongoose.Schema(
     serviceType: String,
     portCountry: String,
     inspectionDate: Date,
-    notes: String,
+    
+// ✅ Client email
+    clientEmail: {
+      type: String,
+      required: true,
+    },
 
-    // 👇 Jab team quotation submit karegi
+    // Team fills later
     amount: Number,
     description: String,
     status: {

@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 ========================= */
 exports.createQuotation = async (req, res) => {
   try {
-    const { shipType, serviceType, portCountry, inspectionDate, notes } =
+    const { shipType, serviceType, portCountry, inspectionDate, clientEmail, } =
       req.body;
 
     const quotation = await Quotation.create({
@@ -26,72 +26,72 @@ exports.createQuotation = async (req, res) => {
       serviceType,
       portCountry,
       inspectionDate,
-      notes,
+      clientEmail,
     });
 
     // ✅ Unique Submit Link
     const submitLink = `http://localhost:5173/submit-quotation/${quotation._id}`;
 
     // ✅ Send Email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: "project@fathommarineconsultants.com",
-      subject: "🚢 New Inspection Enquiry",
-      html: `
-      <div style="font-family:Arial, sans-serif; padding:20px;">
+   await transporter.sendMail({
+  from: process.env.EMAIL_USER,
+  to: clientEmail,
+  subject: "🚢 New Inspection Enquiry",
 
-        <h2 style="color:#2c5cc5; text-align:center;">
-          🚢 New Inspection Enquiry
-        </h2>
+  html: `
+  <div style="font-family:Arial, sans-serif; padding:20px;">
 
-        <p>Hello Team,</p>
-        <p>Please find the inspection request details below:</p>
+    <h2 style="color:#2c5cc5; text-align:center;">
+      🚢 New Inspection Enquiry
+    </h2>
 
-        <table border="1" cellpadding="10" cellspacing="0" width="100%" style="border-collapse:collapse;">
-          <tr style="background:#2c5cc5; color:white;">
-            <th align="left">Field</th>
-            <th align="left">Details</th>
-          </tr>
-          <tr>
-            <td><strong>Ship Type</strong></td>
-            <td>${shipType}</td>
-          </tr>
-          <tr>
-            <td><strong>Service Type</strong></td>
-            <td>${serviceType}</td>
-          </tr>
-          <tr>
-            <td><strong>Port & Country</strong></td>
-            <td>${portCountry}</td>
-          </tr>
-          <tr>
-            <td><strong>Inspection Date</strong></td>
-            <td>${inspectionDate}</td>
-          </tr>
-        </table>
+    <p>Hello Team,</p>
+    <p>Please find the inspection request details below:</p>
 
-        <div style="text-align:center; margin-top:30px;">
-          <a href="${submitLink}"
-             style="
-               background-color:#2c5cc5;
-               color:white;
-               padding:12px 25px;
-               text-decoration:none;
-               border-radius:6px;
-               display:inline-block;
-               font-weight:bold;">
-             Submit Quotation
-          </a>
-        </div>
+    <table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+      <tr style="background:#2c5cc5; color:white;">
+        <th align="left">Field</th>
+        <th align="left">Details</th>
+      </tr>
+      <tr>
+        <td><strong>Ship Type</strong></td>
+        <td>${shipType}</td>
+      </tr>
+      <tr>
+        <td><strong>Service Type</strong></td>
+        <td>${serviceType}</td>
+      </tr>
+      <tr>
+        <td><strong>Port & Country</strong></td>
+        <td>${portCountry}</td>
+      </tr>
+      <tr>
+        <td><strong>Inspection Date</strong></td>
+        <td>${inspectionDate}</td>
+      </tr>
+    </table>
 
-        <p style="margin-top:30px;">
-          Regards,<br/>
-          <strong>Fathom Marine</strong>
-        </p>
+    <div style="text-align:center; margin-top:30px;">
+      <a href="${submitLink}"
+         style="background-color:#2c5cc5;
+                color:white;
+                padding:12px 25px;
+                text-decoration:none;
+                border-radius:6px;
+                display:inline-block;
+                font-weight:bold;">
+         Submit Quotation
+      </a>
+    </div>
 
-      </div>
-      `,
-    });
+    <p style="margin-top:30px;">
+      Regards,<br/>
+      <strong>Fathom Marine</strong>
+    </p>
+
+  </div>
+  `
+});
 
     res.json({
       success: true,
