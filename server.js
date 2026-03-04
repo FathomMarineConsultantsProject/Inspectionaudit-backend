@@ -8,7 +8,7 @@ dotenv.config(); // ✅ ALWAYS TOP
 const app = express();
 
 /* =========================
-   CORS
+   CORS (FIXED)
 ========================= */
 app.use(
   cors({
@@ -16,12 +16,15 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:8081",
-      // "https://your-frontend.vercel.app"
+      "https://inspectionaudit-frontend-dashboard.vercel.app"
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ Preflight support (NOW IN RIGHT PLACE)
+app.options("*", cors());
 
 app.use(express.json());
 
