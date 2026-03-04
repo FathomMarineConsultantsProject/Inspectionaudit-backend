@@ -12,12 +12,13 @@ const app = express();
 ========================= */
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:8081",
-      "https://inspectionaudit-frontend-dashboard.vercel.app"
-    ],
+   origin: [
+  "http://localhost:5173",
+  "http://localhost:5175", // ✅ ADD THIS
+  "http://localhost:3000",
+  "http://localhost:8081",
+  "https://inspectionaudit-frontend-dashboard.vercel.app"
+],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
