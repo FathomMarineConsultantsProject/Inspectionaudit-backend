@@ -30,8 +30,7 @@ exports.createQuotation = async (req, res) => {
     });
 
     // ✅ Unique Submit Link
-    const submitLink = `http://localhost:5173/submit-quotation/${quotation._id}`;
-
+  const submitLink = `${process.env.FRONTEND_URL}/submit-quotation/${quotation._id}`;
     // ✅ Send Email
    await transporter.sendMail({
   from: process.env.EMAIL_USER,
