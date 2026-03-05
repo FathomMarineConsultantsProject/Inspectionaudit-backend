@@ -10,22 +10,25 @@ const app = express();
 /* =========================
    CORS (FIXED)
 ========================= */
-app.use(
-  cors({
-   origin: [
-  "http://localhost:5173",
-  "http://localhost:5175", // ✅ ADD THIS
-  "http://localhost:3000",
-  "http://localhost:8081",
-  "https://inspectionaudit-frontend-dashboard.vercel.app"
-],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (
+      !origin ||
+      origin.startsWith("http://localhost") ||
+      origin.endsWith(".vercel.app")
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+};
 
-// ✅ Preflight support (NOW IN RIGHT PLACE)
-app.options("*", cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
