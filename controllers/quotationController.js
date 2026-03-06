@@ -105,7 +105,6 @@ const submitLink = "https://inspectionaudit-frontend-dashboard.vercel.app/submit
 /* =========================
    SUBMIT QUOTATION (Team fills amount)
 ========================= */
-exports.submitQuotation = async (req, res) => {
   exports.submitQuotation = async (req, res) => {
   try {
     const { amount, description } = req.body;
@@ -123,7 +122,6 @@ exports.submitQuotation = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false });
   }
-};
 };
 
 /* =========================
