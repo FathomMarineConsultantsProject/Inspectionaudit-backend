@@ -23,6 +23,7 @@ exports.createQuotation = async (req, res) => {
       shipType,
       serviceType,
       portCountry,
+      inspectionDate,
       clientEmail,
       status: "Pending",
     });
