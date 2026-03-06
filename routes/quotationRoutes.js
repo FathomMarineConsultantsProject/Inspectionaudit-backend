@@ -10,7 +10,7 @@ const {
 /* =========================
    CREATE (Client Form)
 ========================= */
-router.post("/create", createQuotation);
+router.post("/", createQuotation);
 
 /* =========================
    SUBMIT QUOTATION (Team)
@@ -20,6 +20,6 @@ router.post("/submit", submitQuotation);
 /* =========================
    DASHBOARD GET ALL
 ========================= */
-router.get("/all", getAllQuotations);
+router.get("/", getAllQuotations);
 
 module.exports = router;
