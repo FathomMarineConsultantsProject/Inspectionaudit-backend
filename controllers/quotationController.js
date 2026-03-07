@@ -71,20 +71,37 @@ exports.createQuotation = async (req, res) => {
   }
 };
 
+
 /* =========================
-   SUBMIT QUOTATION (Team fills amount & description)
+   SUBMIT QUOTATION (Find by Email & Update)
 ========================= */
 exports.submitQuotation = async (req, res) => {
   try {
-    const { amount, description } = req.body;
+    const { clientEmail, amount, description } = req.body;
 
-    const quotation = await Quotation.create({
-      amount,
-      description,
-      status: "Quoted",
+    // Find the record by email and status, then update it
+    const updatedQuotation = await Quotation.findOneAndUpdate(
+      { clientEmail: clientEmail, status: "Pending" }, 
+      { 
+        amount, 
+        description, 
+        status: "Quoted" 
+      },
+      { new: true, sort: { createdAt: -1 } } // Update the newest one first
+    );
+
+    if (!updatedQuotation) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "No pending enquiry found for this email." 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: "Quotation updated successfully", 
+      data: updatedQuotation 
     });
-
-    res.json({ success: true, message: "Quotation submitted successfully", data: quotation });
   } catch (error) {
     console.log("Submit Quotation Error:", error);
     res.status(500).json({ success: false, error: error.message });
