@@ -9,12 +9,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// CREATE (Form fill hone par)
+// 1. CREATE (Form fill hone par)
 exports.createQuotation = async (req, res) => {
   try {
     const { shipType, serviceType, portCountry, inspectionDate, clientEmail, clientName } = req.body;
 
     const quotation = await Quotation.create({
+      enquiryRef: `FM-${Math.floor(1000 + Math.random() * 9000)}`, // Auto-generate ref
       shipType,
       serviceType,
       portCountry,
@@ -30,7 +31,7 @@ exports.createQuotation = async (req, res) => {
   }
 };
 
-// SUBMIT (Jab team fee confirm karegi - IDWAL Style Email)
+// 2. SUBMIT (Confirmation Email after "YES" in UI Modal)
 exports.submitQuotation = async (req, res) => {
   try {
     const { clientEmail, amount, description } = req.body;
@@ -45,50 +46,49 @@ exports.submitQuotation = async (req, res) => {
       return res.status(404).json({ success: false, message: "No pending enquiry found." });
     }
 
-    // --- IDWAL STYLE EMAIL LOGIC ---
+    // --- FATHOM MARINE STYLE EMAIL LOGIC (EXACTLY LIKE IMAGE) ---
     const mailOptions = {
-      from: `"Idwal Marine" <${process.env.EMAIL_USER}>`,
+      from: `"Fathom Marine Operations" <${process.env.EMAIL_USER}>`,
       to: clientEmail,
       subject: `Thank you for confirming availability for enquiry ref: ${updatedQuotation.enquiryRef}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; color: #333;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; color: #333; line-height: 1.6;">
           <p>Dear ${updatedQuotation.clientName},</p>
           
           <p>Thank you for confirming availability for enquiry ref: <strong>${updatedQuotation.enquiryRef}</strong></p>
           
           <p>The enquiry details are as follows for your reference:</p>
           
-          <div style="margin: 20px 0; line-height: 1.8;">
-            <strong>Idwal ref:</strong> ${updatedQuotation.enquiryRef}<br>
-            <strong>Vessel type:</strong> ${updatedQuotation.shipType || "Bulk Carrier"}<br>
-            <strong>Inspection type:</strong> ${updatedQuotation.serviceType || "Pre-purchase Inspection"}<br>
-            <strong>Location:</strong> ${updatedQuotation.portCountry || "New Haven; Conn, United States"}<br>
-            <strong>Date:</strong> ${updatedQuotation.inspectionDate || "09/03/2026 - 14/03/2026"}
+          <div style="margin: 25px 0; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #5ac8d8;">
+            <p style="margin: 5px 0;"><strong>Fathom Marine ref:</strong> ${updatedQuotation.enquiryRef}</p>
+            <p style="margin: 5px 0;"><strong>Vessel type:</strong> ${updatedQuotation.shipType || "Bulk Carrier"}</p>
+            <p style="margin: 5px 0;"><strong>Inspection type:</strong> ${updatedQuotation.serviceType || "Pre-purchase Inspection"}</p>
+            <p style="margin: 5px 0;"><strong>Location:</strong> ${updatedQuotation.portCountry || "Baltimore, United States"}</p>
+            <p style="margin: 5px 0;"><strong>Date:</strong> ${updatedQuotation.inspectionDate || "09/03/2026 - 14/03/2026"}</p>
+            <p style="margin: 5px 0;"><strong>Agreed Fee:</strong> $${amount}</p>
           </div>
 
           <p>
             We will update once we hear further from the client. In case you require any assistance 
             please contact operations by reply to this email or call 
-            <span style="color: #007bff;">+44 2920 446 644 (UK)</span> and 
-            <span style="color: #007bff;">+86 21 62195047 (China)</span>.
+            <span style="color: #007bff; text-decoration: none;">+44 2920 446 644 (Global Ops)</span>.
           </p>
           
-          <p style="margin-top: 30px; font-size: 0.9em; color: #777;">
-            Sent via IDWAL Marine Inspection System
+          <br>
+          <p style="margin-top: 20px; font-weight: bold; color: #1a1a1a;">
+            Regards,<br>
+            Operations Team<br>
+            Fathom Marine Inspection System
           </p>
         </div>
       `
     };
 
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (err) {
-      console.log("Mail delivery failed:", err);
-    }
+    await transporter.sendMail(mailOptions);
 
     res.json({ 
       success: true, 
-      message: "Quotation updated and IDWAL confirmation email sent!", 
+      message: "Quotation updated and Fathom Marine confirmation email sent!", 
       data: updatedQuotation 
     });
 
@@ -97,7 +97,7 @@ exports.submitQuotation = async (req, res) => {
   }
 };
 
-// GET ALL
+// 3. GET ALL
 exports.getAllQuotations = async (req, res) => {
   try {
     const quotations = await Quotation.find().sort({ createdAt: -1 });
