@@ -1,113 +1,135 @@
 const Quotation = require("../models/Quotation");
 const nodemailer = require("nodemailer");
 
-// SMTP Transporter - Vercel ke liye single connection mode zyada stable hai
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // 16-digit App Password
-  },
-  // Vercel/Serverless ke liye timeouts badhana zaroori hai
-  connectionTimeout: 10000, 
-  socketTimeout: 10000,
-});
+/* =========================
+   EMAIL TRANSPORTER CONFIG
+========================= */
+const mongoose = require("mongoose");
+
+const quotationSchema = new mongoose.Schema(
+{
+  shipType: { type: String },
+  serviceType: { type: String },
+  portCountry: { type: String },
+  inspectionDate: { type: String },   // ADD THIS
+  clientEmail: { type: String },
+  clientName: { type: String },       // ADD THIS
+
+  amount: { type: Number },
+  description: { type: String },
+
+  status: { type: String, default: "Pending" }
+},
+{ timestamps: true }
+);
+
+module.exports = mongoose.model("Quotation", quotationSchema);
 
 /* =========================
-   1. CREATE (Form Submission)
+   CREATE QUOTATION (Client fills form)
 ========================= */
 exports.createQuotation = async (req, res) => {
   try {
-    const { shipType, serviceType, portCountry, inspectionDate, clientEmail, clientName } = req.body;
+    const { shipType, serviceType, portCountry, inspectionDate, clientEmail } = req.body;
 
     const quotation = await Quotation.create({
-      enquiryRef: `FM-${Math.floor(1000 + Math.random() * 9000)}`,
       shipType,
       serviceType,
       portCountry,
       inspectionDate,
       clientEmail,
-      clientName: clientName || "Valued Client",
       status: "Pending",
     });
 
-    return res.status(201).json({ success: true, message: "Enquiry Created", data: quotation });
+    const submitLink = "https://inspectionaudit-frontend-dashboard.vercel.app/submit-quotation";
+
+    // Send Email (wrap in try/catch so failure won't break API)
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: clientEmail,
+        subject: "🚢 New Inspection Enquiry",
+        html: `
+          <div style="font-family:Arial, sans-serif; padding:20px;">
+            <h2 style="color:#2c5cc5; text-align:center;">🚢 New Inspection Enquiry</h2>
+            <p>Hello Team,</p>
+            <p>Please find the inspection request details below:</p>
+            <table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+              <tr style="background:#2c5cc5; color:white;">
+                <th align="left">Field</th>
+                <th align="left">Details</th>
+              </tr>
+              <tr><td><strong>Ship Type</strong></td><td>${shipType || "-"}</td></tr>
+              <tr><td><strong>Service Type</strong></td><td>${serviceType || "-"}</td></tr>
+              <tr><td><strong>Port & Country</strong></td><td>${portCountry || "-"}</td></tr>
+              <tr><td><strong>Inspection Date</strong></td><td>${inspectionDate || "-"}</td></tr>
+            </table>
+            <div style="text-align:center; margin-top:30px;">
+              <a href="${submitLink}" style="background-color:#2c5cc5; color:white; padding:12px 25px; text-decoration:none; border-radius:6px; display:inline-block; font-weight:bold;">
+                Submit Quotation
+              </a>
+            </div>
+            <p style="margin-top:30px;">Regards,<br/><strong>Fathom Marine</strong></p>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.log("Email Error:", emailError);
+    }
+
+    res.json({ success: true, message: "Quotation Created & Email Sent", data: quotation });
   } catch (error) {
-    console.error("❌ Create Error:", error.message);
-    return res.status(500).json({ success: false, error: "Failed to create enquiry" });
+    console.log("Create Quotation Error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
+
 /* =========================
-   2. SUBMIT (Confirmed Availability & Email)
+   SUBMIT QUOTATION (Find by Email & Update)
 ========================= */
 exports.submitQuotation = async (req, res) => {
   try {
     const { clientEmail, amount, description } = req.body;
 
-    // 1. Database Update
+    // Find the record by email and status, then update it
     const updatedQuotation = await Quotation.findOneAndUpdate(
       { clientEmail: clientEmail, status: "Pending" }, 
-      { amount, description, status: "Quoted" },
-      { new: true, sort: { createdAt: -1 } }
+      { 
+        amount, 
+        description, 
+        status: "Quoted" 
+      },
+      { new: true, sort: { createdAt: -1 } } // Update the newest one first
     );
 
     if (!updatedQuotation) {
-      return res.status(404).json({ success: false, message: "No pending enquiry found for this email." });
+      return res.status(404).json({ 
+        success: false, 
+        message: "No pending enquiry found for this email." 
+      });
     }
 
-    // 2. Prepare Email
-    const mailOptions = {
-      from: `"Fathom Marine Operations" <${process.env.EMAIL_USER}>`,
-      to: clientEmail,
-      subject: `Availability Confirmed: Enquiry ref ${updatedQuotation.enquiryRef}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; color: #333; line-height: 1.6; border: 1px solid #eee; padding: 25px;">
-          <h2 style="color: #2d3454; margin-bottom: 20px;">FATHOM MARINE</h2>
-          <p>Dear ${updatedQuotation.clientName},</p>
-          <p>Thank you for confirming availability for enquiry ref: <strong>${updatedQuotation.enquiryRef}</strong></p>
-          <div style="margin: 25px 0; padding: 20px; background-color: #f4f7f8; border-left: 5px solid #5ac8d8; border-radius: 4px;">
-             <p><strong>Ref:</strong> ${updatedQuotation.enquiryRef}</p>
-             <p><strong>Vessel:</strong> ${updatedQuotation.shipType || "N/A"}</p>
-             <p><strong>Location:</strong> ${updatedQuotation.portCountry || "N/A"}</p>
-             <p style="font-size: 1.2em; color: #2d3454;"><strong>Agreed Fee: $${amount}</strong></p>
-          </div>
-          <p>Regards,<br><strong>Operations Team</strong></p>
-        </div>
-      `
-    };
-
-    // 3. Email Send (Await inside try-catch to prevent crashing the whole request)
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log("✅ Email sent successfully");
-    } catch (mailError) {
-      console.error("❌ Mail Delivery Failed:", mailError.message);
-      // Ham yahan response 200 hi bhejenge kyunki Database update ho chuka hai
-    }
-
-    return res.status(200).json({ 
+    res.json({ 
       success: true, 
-      message: "Quotation updated successfully!", 
+      message: "Quotation updated successfully", 
       data: updatedQuotation 
     });
-
   } catch (error) {
-    console.error("❌ Submit Error:", error.message);
-    return res.status(500).json({ success: false, error: "Internal Server Error" });
+    console.log("Submit Quotation Error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
 /* =========================
-   3. GET ALL
+   GET ALL QUOTATIONS (Dashboard)
 ========================= */
 exports.getAllQuotations = async (req, res) => {
   try {
     const quotations = await Quotation.find().sort({ createdAt: -1 });
-    return res.json({ success: true, data: quotations });
+    res.json({ success: true, data: quotations });
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+    console.log("Get All Quotations Error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
