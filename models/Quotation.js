@@ -1,20 +1,19 @@
 const mongoose = require("mongoose");
 
 const quotationSchema = new mongoose.Schema(
-{
-  shipType: { type: String },
-  serviceType: { type: String },
-  portCountry: { type: String },
-  inspectionDate: { type: String },   // ADD THIS
-  clientEmail: { type: String },
-  clientName: { type: String },       // ADD THIS
+  {
+ // Client info (optional for submit route)
+  shipType: { type: String, required: false },
+  serviceType: { type: String, required: false },
+  portCountry: { type: String, required: false },
+  clientEmail: { type: String, required: false },
 
-  amount: { type: Number },
-  description: { type: String },
+  // Team fills these
+  amount: { type: Number, required: false },
+  description: { type: String, required: false },
 
-  status: { type: String, default: "Pending" }
-},
-{ timestamps: true }
-);
+  // Status
+  status: { type: String, default: "Pending" }, // Default Pending, submit changes to Quoted
+}, { timestamps: true });
 
 module.exports = mongoose.model("Quotation", quotationSchema);
