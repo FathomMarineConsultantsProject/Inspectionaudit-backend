@@ -76,15 +76,31 @@ exports.createQuotation = async (req, res) => {
 ========================= */
 exports.submitQuotation = async (req, res) => {
   try {
-    const { amount, description } = req.body;
+    const { clientEmail, amount, description } = req.body;
 
-    const quotation = await Quotation.create({
-      amount,
-      description,
-      status: "Quoted",
+    const quotation = await Quotation.findOneAndUpdate(
+      { clientEmail: clientEmail, status: "Pending" }, // existing quotation
+      {
+        amount: amount,
+        description: description,
+        status: "Quoted",
+      },
+      { new: true }
+    );
+
+    if (!quotation) {
+      return res.status(404).json({
+        success: false,
+        message: "Quotation not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Quotation submitted successfully",
+      data: quotation,
     });
 
-    res.json({ success: true, message: "Quotation submitted successfully", data: quotation });
   } catch (error) {
     console.log("Submit Quotation Error:", error);
     res.status(500).json({ success: false, error: error.message });
