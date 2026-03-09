@@ -3,42 +3,45 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
-dotenv.config(); // ✅ ALWAYS TOP
+dotenv.config(); // ✅ Load env variables first
 
 const app = express();
 
 /* =========================
-   CORS (FIXED)
+   MIDDLEWARE
+========================= */
+
+app.use(express.json());
+
+/* =========================
+   CORS CONFIG
 ========================= */
 app.use(
   cors({
-   origin: [
-  "http://localhost:5173",
-  "http://localhost:5175", // ✅ ADD THIS
-  "http://localhost:3000",
-  "http://localhost:8081",
-  "https://inspectionaudit-frontend-dashboard.vercel.app"
-],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5175",
+      "http://localhost:3000",
+      "http://localhost:8081",
+      "https://inspectionaudit-frontend-dashboard.vercel.app",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ Preflight support (NOW IN RIGHT PLACE)
 app.options("*", cors());
 
-app.use(express.json());
-
 /* =========================
-   Logging Middleware
+   REQUEST LOGGING
 ========================= */
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
+  console.log(`${req.method} ${req.originalUrl}`);
   next();
 });
 
 /* =========================
-   Health Check
+   HEALTH CHECK
 ========================= */
 app.get("/", (req, res) => {
   res.json({ message: "API is running ✅" });
@@ -47,6 +50,7 @@ app.get("/", (req, res) => {
 /* =========================
    ROUTES
 ========================= */
+
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const loginRoutes = require("./routes/loginRoutes");
@@ -62,6 +66,7 @@ app.use("/api/quotation", quotationRoutes);
 /* =========================
    DATABASE CONNECTION
 ========================= */
+
 const PORT = process.env.PORT || 5000;
 
 mongoose
@@ -98,6 +103,7 @@ app.use((req, res) => {
 ========================= */
 app.use((err, req, res, next) => {
   console.error("Server Error:", err.stack);
+
   res.status(500).json({
     success: false,
     message: "Something went wrong",

@@ -5,21 +5,27 @@ const {
   createQuotation,
   submitQuotation,
   getAllQuotations,
+  deleteQuotation,
 } = require("../controllers/quotationController");
 
 /* =========================
-   CREATE (Client Form)
+   1. CREATE QUOTATION (Client Form)
 ========================= */
 router.post("/", createQuotation);
 
 /* =========================
-   SUBMIT QUOTATION (Team)
+   2. SUBMIT QUOTATION (Surveyor/Team)
 ========================= */
 router.post("/submit", submitQuotation);
 
 /* =========================
-   DASHBOARD GET ALL
+   3. GET ALL QUOTATIONS (Dashboard)
 ========================= */
 router.get("/", getAllQuotations);
+
+/* =========================
+   4. DELETE QUOTATION (Admin)
+========================= */
+router.delete("/:id", deleteQuotation);
 
 module.exports = router;
