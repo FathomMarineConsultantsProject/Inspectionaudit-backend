@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 /* =========================
-   CREATE QUOTATION (Client fills form)
+   1. CREATE QUOTATION (Client fills form)
 ========================= */
 exports.createQuotation = async (req, res) => {
   try {
@@ -28,20 +28,20 @@ exports.createQuotation = async (req, res) => {
       status: "Pending",
     });
 
-    const submitLink = "https://inspectionaudit-frontend-dashboard.vercel.app/submit-quotation";
+    // Link for the team to fill the amount (Passing email in URL for auto-linking)
+    const submitLink = `https://inspectionaudit-frontend-dashboard.vercel.app/submit-quotation?email=${clientEmail}`;
 
-    // Send Email (wrap in try/catch so failure won't break API)
+    // Send Email to the Admin/Team
     try {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
-        to: clientEmail,
-        subject: "🚢 New Inspection Enquiry",
+        to: process.env.EMAIL_USER, // Usually sent to admin or "clientEmail" if intended for client
+        subject: "🚢 New Inspection Enquiry Received",
         html: `
-          <div style="font-family:Arial, sans-serif; padding:20px;">
+          <div style="font-family:Arial, sans-serif; padding:20px; border: 1px solid #eee;">
             <h2 style="color:#2c5cc5; text-align:center;">🚢 New Inspection Enquiry</h2>
-            <p>Hello Team,</p>
-            <p>Please find the inspection request details below:</p>
-            <table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+            <p>A new request has been submitted by: <strong>${clientEmail}</strong></p>
+            <table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse; margin-bottom:20px;">
               <tr style="background:#2c5cc5; color:white;">
                 <th align="left">Field</th>
                 <th align="left">Details</th>
@@ -53,10 +53,10 @@ exports.createQuotation = async (req, res) => {
             </table>
             <div style="text-align:center; margin-top:30px;">
               <a href="${submitLink}" style="background-color:#2c5cc5; color:white; padding:12px 25px; text-decoration:none; border-radius:6px; display:inline-block; font-weight:bold;">
-                Submit Quotation
+                Fill Amount & Finalize Quote
               </a>
             </div>
-            <p style="margin-top:30px;">Regards,<br/><strong>Fathom Marine</strong></p>
+            <p style="margin-top:30px; font-size:12px; color:#777;">Regards,<br/><strong>Fathom Marine System</strong></p>
           </div>
         `
       });
@@ -64,7 +64,7 @@ exports.createQuotation = async (req, res) => {
       console.log("Email Error:", emailError);
     }
 
-    res.json({ success: true, message: "Quotation Created & Email Sent", data: quotation });
+    res.status(201).json({ success: true, message: "Quotation Created & Email Sent", data: quotation });
   } catch (error) {
     console.log("Create Quotation Error:", error);
     res.status(500).json({ success: false, error: error.message });
@@ -72,19 +72,31 @@ exports.createQuotation = async (req, res) => {
 };
 
 /* =========================
-   SUBMIT QUOTATION (Team fills amount & description)
+   2. SUBMIT QUOTATION (Team fills amount & description)
 ========================= */
 exports.submitQuotation = async (req, res) => {
   try {
-    const { amount, description } = req.body;
+    const { clientEmail, amount, description } = req.body;
 
-    const quotation = await Quotation.create({
-      amount,
-      description,
-      status: "Quoted",
-    });
+    // Email use karke existing record ko update karein (Duplicate entry avoid karne ke liye)
+    const updatedQuotation = await Quotation.findOneAndUpdate(
+      { clientEmail: clientEmail, status: "Pending" }, // Search criteria
+      { 
+        amount: amount, 
+        description: description, 
+        status: "Quoted" 
+      },
+      { new: true } // Return the updated document
+    );
 
-    res.json({ success: true, message: "Quotation submitted successfully", data: quotation });
+    if (!updatedQuotation) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "No pending enquiry found for this email. It might already be quoted or doesn't exist." 
+      });
+    }
+
+    res.json({ success: true, message: "Quotation submitted and linked successfully!", data: updatedQuotation });
   } catch (error) {
     console.log("Submit Quotation Error:", error);
     res.status(500).json({ success: false, error: error.message });
@@ -92,14 +104,35 @@ exports.submitQuotation = async (req, res) => {
 };
 
 /* =========================
-   GET ALL QUOTATIONS (Dashboard)
+   3. GET ALL QUOTATIONS (Admin Dashboard)
 ========================= */
 exports.getAllQuotations = async (req, res) => {
   try {
+    // Newest entries first
     const quotations = await Quotation.find().sort({ createdAt: -1 });
     res.json({ success: true, data: quotations });
   } catch (error) {
     console.log("Get All Quotations Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/* =========================
+   4. DELETE QUOTATION (Admin Action)
+========================= */
+exports.deleteQuotation = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedQuotation = await Quotation.findByIdAndDelete(id);
+
+    if (!deletedQuotation) {
+      return res.status(404).json({ success: false, message: "Quotation not found" });
+    }
+
+    res.json({ success: true, message: "Quotation deleted successfully" });
+  } catch (error) {
+    console.log("Delete Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
