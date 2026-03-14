@@ -2,57 +2,59 @@ const mongoose = require("mongoose");
 
 const enquirySchema = new mongoose.Schema(
   {
-    clientName: {
+    surveyorName: {
       type: String,
+      required: true
     },
 
     pic: {
-      type: String,
+      type: String
     },
 
     phone: {
-      type: String,
+      type: String
     },
 
-    clientEmail: {
+    surveyorEmail: {
       type: String,
-      required: true,
+      required: true
     },
 
     shipType: {
       type: String,
-      required: true,
+      required: true
     },
 
     serviceType: {
-      type: String,
+      type: String
     },
 
     portCountry: {
-      type: String,
+      type: String
     },
 
     inspectionDate: {
-      type: String,
+      type: String
     },
 
     token: {
       type: String,
-      unique: true,
+      unique: true
     },
 
     surveyorFee: {
-      type: Number,
+      type: Number
     },
 
     status: {
       type: String,
-      default: "pending",
+      enum: ["pending", "confirmed", "declined"],
+      default: "pending"
     },
 
     declineReason: {
-      type: String,
-    },
+      type: String
+    }
   },
   { timestamps: true }
 );
