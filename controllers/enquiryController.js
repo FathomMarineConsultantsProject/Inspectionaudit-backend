@@ -39,7 +39,7 @@ exports.createEnquiry = async (req, res) => {
       process.env.FRONTEND_URL ||
       "https://inspectionaudit-frontend-dashboard.vercel.app";
 
-    const link = `${frontendUrl}/client-enquiry/${token}`;
+    const link = `${frontendUrl}/surveyor-enquiry/${token}`;
 
     await transporter.sendMail({
       to: surveyorEmail,
