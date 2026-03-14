@@ -15,7 +15,7 @@ exports.createEnquiry = async (req, res) => {
     });
 
     // Use process.env.FRONTEND_URL for production
-    const frontendUrl = process.env.FRONTEND_URL || "https://inspectionaudit-frontend.vercel.app";
+    const frontendUrl = process.env.FRONTEND_URL || "https://inspectionaudit-frontend-dashboard.vercel.app";
     const link = `${frontendUrl}/quotation/${token}`;
 
     await transporter.sendMail({
@@ -95,7 +95,7 @@ exports.confirmAvailability = async (req, res) => {
       subject: `Confirmation of Availability - Ref: 113/${enquiry._id.toString().slice(-4)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; border: 1px solid #eee; padding: 20px;">
-          <h2 style="color: #1a2634; border-bottom: 2px solid #00b8d4; padding-bottom: 10px;">IDWAL</h2>
+          <h2 style="color: #1a2634; border-bottom: 2px solid #00b8d4; padding-bottom: 10px;">Fathom marine consultants</h2>
           <p>Dear ${enquiry.clientName},</p>
           <p>Thank you for confirming availability for enquiry ref: <b>113/${enquiry._id.toString().slice(-4)}</b></p>
           
