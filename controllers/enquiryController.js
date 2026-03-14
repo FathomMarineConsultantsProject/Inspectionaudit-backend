@@ -14,9 +14,10 @@ exports.createEnquiry = async (req, res) => {
       clientName, clientEmail, shipType, serviceType, portCountry, inspectionDate, token
     });
 
-    // Use process.env.FRONTEND_URL for production
-    const frontendUrl = process.env.FRONTEND_URL || "https://inspectionaudit-frontend-dashboard.vercel.app";
-    const link = `${frontendUrl}/quotation/${token}`;
+// Use process.env.FRONTEND_URL for production
+const frontendUrl = process.env.FRONTEND_URL || "https://inspectionaudit-frontend-dashboard.vercel.app";
+
+const link = `${frontendUrl}/client-enquiry/${token}`;
 
     await transporter.sendMail({
       to: clientEmail,
