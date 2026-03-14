@@ -52,12 +52,14 @@ const userRoutes = require("./routes/userRoutes");
 const loginRoutes = require("./routes/loginRoutes");
 const inspectionRoutes = require("./routes/inspectionRoutes");
 const quotationRoutes = require("./routes/quotationRoutes");
+const enquiryRoutes = require("./routes/enquiryRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/inspectors", userRoutes);
 app.use("/api/logins", loginRoutes);
 app.use("/api/inspections", inspectionRoutes);
 app.use("/api/quotation", quotationRoutes);
+app.use("/api", enquiryRoutes);
 
 /* =========================
    DATABASE CONNECTION
