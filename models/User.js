@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema({
     default: ""
   },
 
+  portInspected :{ type: String ,required : true},
+
   currentVessel: {
     name: { type: String, default: "" },
     imo: { type: String, default: "" },
