@@ -96,4 +96,33 @@ router.get("/:inspectionId", async (req, res) => {
   }
 });
 
+/* ===============================
+    GET ALL INSPECTIONS (For Dashboard)
+================================ */
+router.get("/all", async (req, res) => {
+  try {
+    const inspections = await Inspection.find().sort({ createdAt: -1 });
+    res.json({ success: true, inspections });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/* ===============================
+    UPDATE INSPECTION STATUS
+================================ */
+router.put("/update/:id", async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    const updated = await Inspection.findByIdAndUpdate(
+      req.params.id,
+      { status, notes },
+      { new: true }
+    );
+    res.json({ success: true, inspection: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
