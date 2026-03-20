@@ -2,73 +2,47 @@ const mongoose = require("mongoose");
 
 const inspectionSchema = new mongoose.Schema(
   {
-    // 👤 Who created inspection
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
-    // 🚢 Inspection Details
     shipName: {
       type: String,
       required: true,
       trim: true,
     },
-
-    portName: {
+    portName: { // Frontend se 'portInspected' yahan aayega
       type: String,
       required: true,
       trim: true,
     },
-
+    location: { // 👈 Location field add kar di gayi hai
+      type: String,
+      default: "",
+    },
+    surveyorName: { // 👈 Inspector ka naam save karne ke liye
+      type: String,
+      default: "",
+    },
     inspectionType: {
       type: String,
-      required: true,
+      default: "General", // Default value set kar di taaki error na aaye
     },
-
     inspectionDate: {
       type: Date,
       required: true,
     },
-
-    // 📌 Inspection lifecycle
     status: {
       type: String,
       enum: ["Pending", "In Progress", "Completed", "Cancelled"],
       default: "Pending",
     },
-
-    // 🖼 Media
     shipImage: [{ type: String }],
     logo: String,
-
-    // 📄 Report
-    reportUrl: {
-      type: String,
-      default: "",
-    },
-
-    notes: {
-      type: String,
-      default: "",
-    },
-
-    // 💰 Quotation Integration
-    quotationId: {
-      type: String,
-      default: null,
-    },
-
-    quotationStatus: {
-      type: String,
-      enum: ["Not Sent", "Pending", "Submitted"],
-      default: "Not Sent",
-    },
+    notes: { type: String, default: "" },
   },
-  {
-    timestamps: true, // createdAt & updatedAt
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Inspection", inspectionSchema);

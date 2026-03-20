@@ -3,8 +3,9 @@ const router = express.Router();
 const Inspection = require("../models/Inspection");
 const upload = require("../middleware/upload");
 const mongoose = require("mongoose");
+
 /* ===============================
-   1️⃣ CREATE INSPECTION (MULTIPLE IMAGES)
+    CREATE INSPECTION
 ================================ */
 router.post(
   "/create",
@@ -14,39 +15,54 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      console.log("BODY:", req.body);
+      console.log("Incoming Data:", req.body);
 
-      // ✅ Match frontend field names
       const {
         userId,
         shipName,
-        portInspected,
-        surveyorName,
-        inspectedDate,
+        portInspected,  // Frontend field
+        location,       // Frontend field
+        surveyorName,   // Frontend field
+        inspectedDate,  // Frontend field (DD-MM-YYYY)
       } = req.body;
 
-      // Multiple images
+      // User ID validation
+      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ success: false, message: "Invalid or Missing User ID" });
+      }
+
+      // Date conversion (Frontend se aane wali DD-MM-YYYY string ko Date object mein badalna)
+      let finalDate = new Date();
+      if (inspectedDate) {
+        const parts = inspectedDate.split("-");
+        // format: YYYY-MM-DD
+        finalDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      }
+
+      // Images handling
       let shipImagePaths = [];
       if (req.files?.shipImage) {
         shipImagePaths = req.files.shipImage.map(file => file.path);
       }
-
       const logoPath = req.files?.logo?.[0]?.path || "";
 
+      // Database mein save karna
       const inspection = await Inspection.create({
         userId,
         shipName,
-        portName: portInspected,      // map to schema
-        dateText: inspectedDate,      // map to schema
-        poweredBy: surveyorName,      // map to schema
+        portName: portInspected,   // Map frontend 'portInspected' to 'portName'
+        location: location,        // Map frontend 'location' to 'location'
+        surveyorName: surveyorName,
+        inspectionDate: finalDate, // Date object
         shipImage: shipImagePaths,
         logo: logoPath,
+        inspectionType: "General"  // Default type
       });
 
       res.status(201).json({
         success: true,
+        message: "Inspection created successfully",
         inspectionId: inspection._id,
-        imageCount: shipImagePaths.length,
       });
 
     } catch (err) {
@@ -60,51 +76,23 @@ router.post(
 );
 
 /* ===============================
-   3️⃣ GET INSPECTION (LAST!)
+    GET SINGLE INSPECTION
 ================================ */
 router.get("/:inspectionId", async (req, res) => {
   const { inspectionId } = req.params;
 
-  // ✅ Prevent "Invalid ID" forever
   if (!mongoose.Types.ObjectId.isValid(inspectionId)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid inspection ID format",
-    });
+    return res.status(400).json({ success: false, message: "Invalid ID format" });
   }
 
   try {
     const inspection = await Inspection.findById(inspectionId);
-
     if (!inspection) {
-      return res.status(404).json({
-        success: false,
-        message: "Inspection not found",
-      });
+      return res.status(404).json({ success: false, message: "Not found" });
     }
-
     res.json({ success: true, inspection });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-});
-router.get("/", async (req, res) => {
-  try {
-    const inspections = await Inspection.find().sort({ createdAt: -1 });
-
-    res.json({
-      success: true,
-      count: inspections.length,
-      inspections,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
